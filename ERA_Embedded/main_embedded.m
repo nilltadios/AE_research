@@ -120,7 +120,6 @@ for i_speed = 1:numel(usValues)
     
     % --- Envelope Analysis ---
     % Use reconstructed signal for envelope
-    [tData, rData] = plotResponseAndEnvelope(t_recon, [], thisUs, 2, pitch_raw(1:length(t_recon)), true);
     
     % Hack: plotResponseAndEnvelope expects xSol matrix. 
     % Let's create a dummy matrix for it.
