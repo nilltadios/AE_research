@@ -1,9 +1,9 @@
-function [tData, rData] = plotResponseAndEnvelope(tSol, xSol, Us, analysis_option, xSol_ori)
+function [tData, rData] = plotResponseAndEnvelope(tSol, xSol, Us, analysis_option, xSol_ori, do_plot)
 %plotResponseAndEnvelope Plots the pitch response and its envelope from provided data.
 %
 % This function takes the results of an ODE solution, extracts the pitch
 % time series, finds its upper and lower envelopes using findpeaks, and
-% plots the results.
+% optionally plots the results.
 %
 % INPUTS:
 %   tSol            - (N x 1 double) Time vector from the ODE solution.
@@ -13,10 +13,16 @@ function [tData, rData] = plotResponseAndEnvelope(tSol, xSol, Us, analysis_optio
 %                     used for the plot title.
 %   analysis_option - (integer) Flag to control the plot title.
 %                     1: Original Data, 2: Reconstructed Data.
+%   xSol_ori        - (N x 1 double) Original pitch data (optional, used if analysis_option=2).
+%   do_plot         - (boolean) Optional. If true, generates a plot. Default is true.
 %
 % OUTPUTS:
 %   tData           - (P x 1 double) Time points of the envelope.
 %   rData           - (P x 1 double) Amplitude values of the envelope.
+
+    if nargin < 6
+        do_plot = true;
+    end
 
     % Extract the pitch data from the first column of the solution matrix
     pitchData = xSol(:,1);
@@ -44,29 +50,32 @@ function [tData, rData] = plotResponseAndEnvelope(tSol, xSol, Us, analysis_optio
     rData = abs(allVals(7:end));
     
     % --- Plotting ---
-    figure('Name', sprintf('Response and Envelope for Us=%.2f', Us));
-    hold on;
-    
-    % Set the title based on which data source was used
-    if analysis_option == 1
-        plotTitle = sprintf('Original Pitch Response and Envelope ($U_s$ = %.2f m/s)', Us);
-        plot(tSol, pitchData, 'r-', 'DisplayName', 'Pitch Time Series');
-    elseif analysis_option == 2
-        plotTitle = sprintf('Reconstructed Pitch Response and Envelope ($U_s$ = %.2f m/s)', Us);
-        plot(tSol, xSol_ori, 'r-', 'DisplayName', 'Original Pitch Time Series');
-        plot(tSol, pitchData, 'k--', 'DisplayName', 'Reconstructed Pitch Time Series');
-    else
-        plotTitle = sprintf('Pitch Response and Envelope ($U_s$ = %.2f m/s)', Us);
+    if do_plot
+        figure('Name', sprintf('Response and Envelope for Us=%.2f', Us));
+        hold on;
+        
+        % Set the title based on which data source was used
+        if analysis_option == 1
+            plotTitle = sprintf('Original Pitch Response and Envelope ($U_s$ = %.2f m/s)', Us);
+            plot(tSol, pitchData, 'r-', 'DisplayName', 'Pitch Time Series');
+        elseif analysis_option == 2
+            plotTitle = sprintf('Reconstructed Pitch Response and Envelope ($U_s$ = %.2f m/s)', Us);
+            plot(tSol, xSol_ori, 'r-', 'DisplayName', 'Original Pitch Time Series');
+            plot(tSol, pitchData, 'k--', 'DisplayName', 'Reconstructed Pitch Time Series');
+        else
+            plotTitle = sprintf('Pitch Response and Envelope ($U_s$ = %.2f m/s)', Us);
+        end
+        
+        plot(tData, rData, 'bo', 'MarkerFaceColor','b', 'DisplayName', 'Detected Envelope');
+        hold off;
+        
+        title(plotTitle, 'Interpreter', 'latex');
+        xlabel('Time [s]'); 
+        ylabel('Pitch Angle [rad]');
+        ylim([-0.1 0.1]);
+        legend('show', 'Location', 'best'); 
+        grid on;
+        ax = gca; 
+        ax.FontSize = 12;
     end
-    
-    plot(tData, rData, 'bo', 'MarkerFaceColor','b', 'DisplayName', 'Detected Envelope');
-    hold off;
-    
-    title(plotTitle, 'Interpreter', 'latex');
-    xlabel('Time [s]'); 
-    ylabel('Pitch Angle [rad]');
-    legend('show', 'Location', 'best'); 
-    grid on;
-    ax = gca; 
-    ax.FontSize = 12;
 end

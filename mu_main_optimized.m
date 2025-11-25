@@ -120,7 +120,7 @@ for i_speed = 1:numel(usValues)
     
     % --- Extract envelope data ---
     [tData, rData] = plotResponseAndEnvelope(tSol, xSol_for_analysis,...
-        thisUs, analysis_option, xSol(:,1));
+        thisUs, analysis_option, xSol(:,1), true);
     
     % Check validity of results
     if isempty(tData) || isempty(rData)
@@ -136,7 +136,7 @@ for i_speed = 1:numel(usValues)
     mu_for_analysis = rdot ./ r_for_analysis;
     
     % --- Fit polynomial to mu vs r ---
-    polyCoeffs_mu_r = plotMuVsR(tData, rData, thisUs);
+    polyCoeffs_mu_r = plotMuVsR(tData, rData, thisUs, true);
     
     allGrowthData{i_speed} = struct('r', r_for_analysis,...
         'mu', mu_for_analysis, 'polyfit', polyCoeffs_mu_r);
@@ -266,7 +266,7 @@ for i = 1:numel(usValues)
             'DisplayName', sprintf('$U_s = %.3f$ m/s', thisUs));
         
         % Plot fitted curve
-        r_fit_line = linspace(0, 0.07, 200);
+        r_fit_line = linspace(0, 0.1, 200);
         mu_fit_line = polyval(allGrowthData{i}.polyfit, r_fit_line);
         plot(r_fit_line, mu_fit_line, '-', 'LineWidth', 2,...
             'Color', colors(i,:), 'HandleVisibility', 'off');
@@ -276,6 +276,7 @@ end
 title('Growth Rate vs. Amplitude for Different Flow Speeds');
 xlabel('Amplitude, $r$ [rad]', 'Interpreter', 'latex');
 ylabel('Growth Rate, $\mu = \dot{r}/r$ [1/s]', 'Interpreter', 'latex');
+xlim([0 0.1]);
 legend('show', 'Location', 'best', 'Interpreter', 'latex');
 ax = gca;
 ax.FontSize = 12;
@@ -291,25 +292,11 @@ plot(UcList, rList, 'bo-', 'LineWidth', 2, 'MarkerSize', 6,...
 plot(usVec, amps_pitch, 'k-', 'LineWidth', 2.5,...
     'DisplayName', 'Stable Limit Cycle (Converged Amp.)');
 
+ylim([0 0.1]);
+
 xlabel('Flow Speed ($U_s$) [m/s]');
 ylabel('Pitch Amplitude [rad]');
 title('Bifurcation Diagram for Pitch Response');
-legend('show', 'Location', 'best', 'Interpreter', 'latex');
-ax = gca;
-ax.FontSize = 12;
-hold off;
-
-% --- Bifurcation Diagram for Plunge (bonus) ---
-figure('Color', 'w', 'Name', 'Bifurcation Diagram: Plunge');
-hold on;
-grid on;
-
-plot(usVec, amps_plunge, 'r-', 'LineWidth', 2.5,...
-    'DisplayName', 'Plunge Amplitude');
-
-xlabel('Flow Speed ($U_s$) [m/s]');
-ylabel('Plunge Amplitude [m]');
-title('Bifurcation Diagram for Plunge Response');
 legend('show', 'Location', 'best', 'Interpreter', 'latex');
 ax = gca;
 ax.FontSize = 12;
