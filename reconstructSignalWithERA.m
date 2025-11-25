@@ -160,12 +160,12 @@ fprintf('========================================\n\n');
 
 % --- PROJECTION USING MODE SHAPES IN PHYSICAL COORDINATES ---
 
-% Interpolate original measured signal (pitch only) and ensure row vector
-y_original = interp1(tSol, Y_measured(:,1), tspan, 'linear', 'extrap');
-y_original = y_original(:)';  % Force to row vector: (:) makes column, then ' transposes to row
+% Interpolate original measured signal and ensure it is a matrix of size [n x N_measurements]
+y_original_interp = interp1(tSol, Y_measured, tspan, 'linear', 'extrap');
+y_original = y_original_interp'; % Transpose to get [n x N_measurements]
 
 % Output mode shapes in physical coordinates: Tilde(C) = C*T
-Phi = C_tilde; % (1 x N_r) - mode shapes after transformation
+Phi = C_tilde; % (n x N_r) - mode shapes after transformation
 
 fprintf('C_tilde (mode shapes) = \n');
 disp(C_tilde)
@@ -176,9 +176,9 @@ fprintf('  y_original size: [%d x %d]\n', size(y_original, 1), size(y_original, 
 
 % Project original signal onto ALL mode shapes
 % y(t) = Phi * q(t)  =>  q(t) = pinv(Phi) * y(t)
-
-% q_all = pinv(Phi) * y_original;  % (N_r x N_measurements)
-q_all = Phi' * y_original;  % (N_r x N_measurements)
+% If mode shapes (columns of Phi) are orthogonal, pinv(Phi) can be approximated by Phi'
+% for projection.
+q_all = pinv(Phi) * y_original;  % (N_r x N_measurements) - using pseudoinverse for robustness
 
 num_modes = 2;
 q_subset = q_all(1:num_modes, :);  % (num_modes x N_measurements)
