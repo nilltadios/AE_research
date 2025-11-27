@@ -174,16 +174,28 @@ fprintf('Dimensions check:\n');
 fprintf('  Phi size: [%d x %d]\n', size(Phi, 1), size(Phi, 2));
 fprintf('  y_original size: [%d x %d]\n', size(y_original, 1), size(y_original, 2));
 
+%%
+% % Project original signal onto ALL mode shapes
+% % y(t) = Phi * q(t)  =>  q(t) = pinv(Phi) * y(t)
+% % If mode shapes (columns of Phi) are orthogonal, pinv(Phi) can be approximated by Phi'
+% % for projection.
+% % q_all = pinv(Phi) * y_original;  % (N_r x N_measurements) - using pseudoinverse for robustness
+% q_all = Phi.' * y_original;
+% 
+% num_modes = 2;
+% q_subset = q_all(1:num_modes, :);  % (num_modes x N_measurements)
+% Phi_subset = Phi(:, 1:num_modes);  % (n x num_modes)
+%%
 % Project original signal onto ALL mode shapes
 % y(t) = Phi * q(t)  =>  q(t) = pinv(Phi) * y(t)
 % If mode shapes (columns of Phi) are orthogonal, pinv(Phi) can be approximated by Phi'
 % for projection.
-q_all = pinv(Phi) * y_original;  % (N_r x N_measurements) - using pseudoinverse for robustness
-
+% q_all = pinv(Phi) * y_original;  % (N_r x N_measurements) - using pseudoinverse for robustness
 num_modes = 2;
-q_subset = q_all(1:num_modes, :);  % (num_modes x N_measurements)
 Phi_subset = Phi(:, 1:num_modes);  % (n x num_modes)
+q_subset = pinv(Phi_subset) * y_original;
 
+%%
 % Reconstruct
 y_reconstructed = Phi_subset * q_subset;  % (n x N_measurements)
 

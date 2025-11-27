@@ -36,8 +36,7 @@ gammaXXXXX = Sup(1,6);
 Us_initial = 7.45;
 ICM = 2;
 
-fprintf('Constructing initial conditions (ICM=%d)...
-', ICM);
+fprintf('Constructing initial conditions (ICM=%d)...\n', ICM);
 
 ode_options_fine = odeset('RelTol', 1e-3, 'AbsTol', 1e-6);
 ode_options_coarse = odeset('RelTol', 1e-3, 'AbsTol', 1e-5); 
@@ -63,8 +62,7 @@ elseif ICM == 3
     x0_IC = xIM(end,:)';
 end
 
-fprintf('Initial conditions ready.
-');
+fprintf('Initial conditions ready.\n');
 
 % =========================================================================
 % GROWTH RATE (mu) ANALYSIS
@@ -76,12 +74,9 @@ tspan = 0:dt:tmax;
 
 allGrowthData = cell(1, numel(usValues));
 
-fprintf('\nAnalyzing growth rate (mu) using EMBEDDED ERA...
-');
-fprintf('  Embedding Dimension: %d
-', embedding_dim);
-fprintf('  Delay Steps: %d (dt=%.3f s)
-', delay_time_steps, dt);
+fprintf('\nAnalyzing growth rate (mu) using EMBEDDED ERA...\n');
+fprintf('  Embedding Dimension: %d\n', embedding_dim);
+fprintf('  Delay Steps: %d (dt=%.3f s)\n', delay_time_steps, dt);
 
 iteration_logs = cell(numel(usValues), 1);
 
@@ -158,8 +153,7 @@ end
 rList = 0.00:0.005:0.07;
 UcList = zeros(size(rList));
 
-fprintf('\nCalculating critical speeds (vectorized)...
-');
+fprintf('\nCalculating critical speeds (vectorized)...\n');
 mu_matrix = zeros(numel(usValues), numel(rList));
 
 for i_speed = 1:numel(usValues)
@@ -195,18 +189,15 @@ for ir = 1:numel(rList)
     end
 end
 
-fprintf('Critical speeds calculated.
-');
+fprintf('Critical speeds calculated.\n');
 
 % Steady State Cache (Using original logic, no ERA needed for this part strictly speaking)
 cache_file = 'steady_state_amplitudes.mat';
 if isfile(cache_file)
-    fprintf('\nLoading cached amplitude data...
-');
+    fprintf('\nLoading cached amplitude data...\n');
     load(cache_file);
 else
-    fprintf('\nCalculating steady-state amplitudes...
-');
+    fprintf('\nCalculating steady-state amplitudes...\n');
     usVec = linspace(7.5, 7.7, 100);
     amps_pitch = zeros(size(usVec));
     amps_plunge = zeros(size(usVec));

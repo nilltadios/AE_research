@@ -8,7 +8,7 @@
 %  4. Early-return logic to skip invalid data
 %  5. Preallocated arrays with proper sizes
 %  6. Vectorized amplitude data interpolation/lookup
-%  7. Reduced time steps where appropriate (optional tuning parameter)
+%  7. Reduced  steps where appropriate (optional tuning parameter)
 
 clear all;
 clearvars -global tspan Y;
@@ -40,7 +40,7 @@ ICM = 2;
 
 fprintf('Constructing initial conditions (ICM=%d)...\n', ICM);
 
-% Precompute ODE solver options ONCE to avoid repeated object creation
+% Precompute ODE solver options ONCE to avoid redundant object creation
 ode_options_fine = odeset('RelTol', 1e-3, 'AbsTol', 1e-6);
 ode_options_coarse = odeset('RelTol', 1e-3, 'AbsTol', 1e-5);  % Faster
 ode_opts = ode_options_fine;
@@ -99,22 +99,29 @@ for i_speed = 1:numel(usValues)
     log_entry = sprintf('Us = %.3f m/s: ', thisUs);
     
     % --- Solve the ODE ---
+    fprintf('  Solving ODE... '); 
+    t_ode_start = tic;
     [tSol, xSol] = ode45(@(t,x) aeroelastic(t, x,...
         gammaA,gammaAAA,gammaAAAAA,gammaX,gammaXXX,gammaXXXXX,thisUs),...
         tspan, x0_IC, ode_opts);
+    fprintf('Done (%.4f s).\n', toc(t_ode_start));
     
     xSol_for_analysis = xSol;
     
     % --- Apply ERA reconstruction if requested ---
     if analysis_option == 2
         log_entry = [log_entry, 'ERA reconstructing... '];
+        fprintf('  Running ERA (GPU)... ');
+        t_era_start = tic;
         
         era_params.start_index = 50000;
-        era_params.r_era = 5000;
-        era_params.s_era = 5000;
+        era_params.r_era = 5000;  % Hankel rows (production size)
+        era_params.s_era = 5000;  % Hankel cols (production size)
         era_params.n_r = 4;
         
+        % Note: reconstructSignalWithERA in this folder is modified to use GPU automatically
         reconstructed_pitch = reconstructSignalWithERA(tSol, xSol, tspan, era_params);
+        fprintf('Done (%.4f s).\n', toc(t_era_start));
         xSol_for_analysis(:, 1) = reconstructed_pitch;
     end
     
@@ -124,7 +131,7 @@ for i_speed = 1:numel(usValues)
     
     % Check validity of results
     if isempty(tData) || isempty(rData)
-        log_entry = [log_entry, 'FAILED (no envelope data)'];
+        log_entry = [log_entry, 'FAILED (no envelope data)']
         allGrowthData{i_speed} = struct('r', [], 'mu', [], 'polyfit', []);
         iteration_logs{i_speed} = log_entry;
         continue;
@@ -153,7 +160,7 @@ end
 % =========================================================================
 % CRITICAL SPEED CALCULATION - VECTORIZED
 % =========================================================================
-rList = 0.00:0.005:0.07;
+rList = 0.00:0.005:0.08;
 UcList = zeros(size(rList));
 
 fprintf('\nCalculating critical speeds (vectorized)...\n');
@@ -277,9 +284,8 @@ title('Growth Rate vs. Amplitude for Different Flow Speeds');
 xlabel('Amplitude, $r$ [rad]', 'Interpreter', 'latex');
 ylabel('Growth Rate, $\mu = \dot{r}/r$ [1/s]', 'Interpreter', 'latex');
 xlim([0 0.1]);
-legend('show', 'Location', 'best', 'Interpreter', 'latex');
-ax = gca;
-ax.FontSize = 12;
+legend('Location', 'northeast');
+set(gca, 'FontSize', 12);
 hold off;
 
 % --- Bifurcation Diagram for Pitch ---
@@ -288,18 +294,17 @@ hold on;
 grid on;
 
 plot(UcList, rList, 'bo-', 'LineWidth', 2, 'MarkerSize', 6,...
-    'DisplayName', 'Unstable Limit Cycle ($\mu=0$)');
+    'DisplayName', 'Unstable Limit Cycle (mu=0)');
 plot(usVec, amps_pitch, 'k-', 'LineWidth', 2.5,...
     'DisplayName', 'Stable Limit Cycle (Converged Amp.)');
 
 ylim([0 0.1]);
 
-xlabel('Flow Speed ($U_s$) [m/s]');
+xlabel('Flow Speed (U_s) [m/s]');
 ylabel('Pitch Amplitude [rad]');
 title('Bifurcation Diagram for Pitch Response');
-legend('show', 'Location', 'best', 'Interpreter', 'latex');
-ax = gca;
-ax.FontSize = 12;
+legend('Location', 'northeast');
+set(gca, 'FontSize', 12);
 hold off;
 
 fprintf('\n========================================\n');
